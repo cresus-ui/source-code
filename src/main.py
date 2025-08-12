@@ -13,7 +13,7 @@ from collections import defaultdict
 
 from apify import Actor
 
-from scrapers import (
+from src.scrapers import (
     AmazonScraper,
     EbayScraper,
     WalmartScraper,
