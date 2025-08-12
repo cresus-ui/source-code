@@ -8,6 +8,12 @@ from apify import Actor
 
 from .base_scraper import BaseScraper, Product
 
+# Import de la fonction safe_log depuis main.py
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from main import safe_log
+
 
 class EbayScraper(BaseScraper):
     """Scraper spécialisé pour eBay."""
@@ -27,7 +33,7 @@ class EbayScraper(BaseScraper):
         try:
             # Construction de l'URL de recherche eBay
             search_url = f'{self.base_url}/sch/i.html?_nkw={quote_plus(search_term)}&_sacat=0'
-            await Actor.log.info(f'Recherche eBay: {search_url}')
+            await safe_log('info', f'Recherche eBay: {search_url}')
             
             soup = await self.get_page_content(search_url)
             if not soup:
@@ -40,12 +46,12 @@ class EbayScraper(BaseScraper):
                 product = await self._extract_product_info(container)
                 if product:
                     products.append(product)
-                    await Actor.log.info(f'Produit eBay extrait: {product.title[:50]}...')
+                    await safe_log('info', f'Produit eBay extrait: {product.title[:50]}...')
             
-            await Actor.log.info(f'Total produits eBay trouvés: {len(products)}')
+            await safe_log('info', f'Total produits eBay trouvés: {len(products)}')
             
         except Exception as e:
-            await Actor.log.error(f'Erreur lors du scraping eBay: {str(e)}')
+            await safe_log('error', f'Erreur lors du scraping eBay: {str(e)}')
         
         return products
     
@@ -140,7 +146,7 @@ class EbayScraper(BaseScraper):
             )
             
         except Exception as e:
-            await Actor.log.warning(f'Erreur extraction produit eBay: {str(e)}')
+            await safe_log('warning', f'Erreur extraction produit eBay: {str(e)}')
             return None
     
     async def get_product_details(self, product_url: str) -> Optional[dict]:

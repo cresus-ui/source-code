@@ -8,6 +8,12 @@ from apify import Actor
 
 from .base_scraper import BaseScraper, Product
 
+# Import de la fonction safe_log depuis main.py
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from main import safe_log
+
 
 class EtsyScraper(BaseScraper):
     """Scraper spécialisé pour Etsy."""
@@ -58,7 +64,7 @@ class EtsyScraper(BaseScraper):
                     else:
                         search_url = f'{self.base_url}{endpoint.format(quote_plus(search_term))}'
                     
-                    await Actor.log.info(f'Tentative Etsy endpoint {i+1}: {search_url}')
+                    await safe_log('info', f'Tentative Etsy endpoint {i+1}: {search_url}')
                     
                     # Délai aléatoire avant chaque requête
                     await self.random_delay(4.0, 10.0)
@@ -73,7 +79,7 @@ class EtsyScraper(BaseScraper):
                         'captcha', 'robot', 'blocked', 'access denied', 
                         'security check', 'unusual traffic', 'rate limit'
                     ]):
-                        await Actor.log.warning(f'Blocage détecté sur Etsy, essai endpoint suivant')
+                        await safe_log('warning', f'Blocage détecté sur Etsy, essai endpoint suivant')
                         continue
                     
                     # Sélecteurs pour les résultats de recherche Etsy
@@ -90,29 +96,29 @@ class EtsyScraper(BaseScraper):
                         product_containers = soup.find_all('article', {'data-test-id': True})
                     
                     if product_containers:
-                        await Actor.log.info(f'Trouvé {len(product_containers)} conteneurs de produits Etsy')
+                        await safe_log('info', f'Trouvé {len(product_containers)} conteneurs de produits Etsy')
                         
                         for container in product_containers[:self.max_results]:
                             product = await self._extract_product_info(container)
                             if product:
                                 products.append(product)
-                                await Actor.log.info(f'Produit Etsy extrait: {product.title[:50]}...')
+                                await safe_log('info', f'Produit Etsy extrait: {product.title[:50]}...')
                             
                             # Petit délai entre extractions
                             await self.random_delay(1.0, 3.0)
                         
                         break  # Succès, sortir de la boucle
                     else:
-                        await Actor.log.warning(f'Aucun conteneur de produit trouvé avec endpoint {i+1}')
+                        await safe_log('warning', f'Aucun conteneur de produit trouvé avec endpoint {i+1}')
                         
                 except Exception as e:
-                    await Actor.log.error(f'Erreur avec endpoint Etsy {i+1}: {str(e)}')
+                    await safe_log('error', f'Erreur avec endpoint Etsy {i+1}: {str(e)}')
                     continue
             
-            await Actor.log.info(f'Total produits Etsy trouvés: {len(products)}')
+            await safe_log('info', f'Total produits Etsy trouvés: {len(products)}')
             
         except Exception as e:
-            await Actor.log.error(f'Erreur lors du scraping Etsy: {str(e)}')
+            await safe_log('error', f'Erreur lors du scraping Etsy: {str(e)}')
         
         return products
     
@@ -231,7 +237,7 @@ class EtsyScraper(BaseScraper):
             )
             
         except Exception as e:
-            await Actor.log.warning(f'Erreur extraction produit Etsy: {str(e)}')
+            await safe_log('warning', f'Erreur extraction produit Etsy: {str(e)}')
             return None
     
     async def get_product_details(self, product_url: str) -> Optional[dict]:

@@ -8,6 +8,12 @@ from apify import Actor
 
 from .base_scraper import BaseScraper, Product
 
+# Import de la fonction safe_log depuis main.py
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from main import safe_log
+
 
 class AmazonScraper(BaseScraper):
     """Scraper spécialisé pour Amazon."""
@@ -56,7 +62,7 @@ class AmazonScraper(BaseScraper):
                     else:
                         search_url = f'{self.base_url}{endpoint.format(quote_plus(search_term))}'
                     
-                    await Actor.log.info(f'Tentative Amazon endpoint {i+1}: {search_url}')
+                    await safe_log('info', f'Tentative Amazon endpoint {i+1}: {search_url}')
                     
                     # Délai aléatoire avant chaque requête
                     await self.random_delay(3.0, 8.0)
@@ -67,7 +73,7 @@ class AmazonScraper(BaseScraper):
                     
                     # Vérifier si on a été bloqué
                     if soup.find('img', {'alt': 'captcha'}) or 'robot' in soup.get_text().lower():
-                        await Actor.log.warning(f'CAPTCHA détecté sur Amazon, essai endpoint suivant')
+                        await safe_log('warning', f'CAPTCHA détecté sur Amazon, essai endpoint suivant')
                         continue
                     
                     # Sélecteurs pour les résultats de recherche Amazon
@@ -78,29 +84,29 @@ class AmazonScraper(BaseScraper):
                         product_containers = soup.find_all('div', {'data-asin': True})
                     
                     if product_containers:
-                        await Actor.log.info(f'Trouvé {len(product_containers)} conteneurs de produits')
+                        await safe_log('info', f'Trouvé {len(product_containers)} conteneurs de produits')
                         
                         for container in product_containers[:self.max_results]:
                             product = await self._extract_product_info(container)
                             if product:
                                 products.append(product)
-                                await Actor.log.info(f'Produit Amazon extrait: {product.title[:50]}...')
+                                await safe_log('info', f'Produit Amazon extrait: {product.title[:50]}...')
                             
                             # Petit délai entre extractions
                             await self.random_delay(0.5, 2.0)
                         
                         break  # Succès, sortir de la boucle
                     else:
-                        await Actor.log.warning(f'Aucun conteneur de produit trouvé avec endpoint {i+1}')
+                        await safe_log('warning', f'Aucun conteneur de produit trouvé avec endpoint {i+1}')
                         
                 except Exception as e:
-                    await Actor.log.error(f'Erreur avec endpoint {i+1}: {str(e)}')
+                    await safe_log('error', f'Erreur avec endpoint {i+1}: {str(e)}')
                     continue
             
-            await Actor.log.info(f'Total produits Amazon trouvés: {len(products)}')
+            await safe_log('info', f'Total produits Amazon trouvés: {len(products)}')
             
         except Exception as e:
-            await Actor.log.error(f'Erreur lors du scraping Amazon: {str(e)}')
+            await safe_log('error', f'Erreur lors du scraping Amazon: {str(e)}')
         
         return products
     
@@ -187,7 +193,7 @@ class AmazonScraper(BaseScraper):
             )
             
         except Exception as e:
-            await Actor.log.warning(f'Erreur extraction produit Amazon: {str(e)}')
+            await safe_log('warning', f'Erreur extraction produit Amazon: {str(e)}')
             return None
     
     async def get_product_details(self, product_url: str) -> Optional[dict]:
