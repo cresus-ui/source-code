@@ -31,6 +31,52 @@ async def safe_log(level: str, message: str):
         print(f'[{level.upper()}] {message}')
 
 
+async def retry_on_error(func, *args, max_retries: int = 20, delay: float = 1.0, **kwargs):
+    """Fonction de retry qui tente une opération jusqu'à 20 fois en cas d'erreur.
+    
+    Args:
+        func: La fonction à exécuter
+        *args: Arguments positionnels pour la fonction
+        max_retries: Nombre maximum de tentatives (défaut: 20)
+        delay: Délai entre les tentatives en secondes (défaut: 1.0)
+        **kwargs: Arguments nommés pour la fonction
+    
+    Returns:
+        Le résultat de la fonction si succès
+    
+    Raises:
+        Exception: La dernière exception si toutes les tentatives échouent
+    """
+    import asyncio
+    
+    last_exception = None
+    
+    for attempt in range(1, max_retries + 1):
+        try:
+            if asyncio.iscoroutinefunction(func):
+                result = await func(*args, **kwargs)
+            else:
+                result = func(*args, **kwargs)
+            
+            if attempt > 1:
+                await safe_log('info', f'Succès après {attempt} tentatives')
+            
+            return result
+            
+        except Exception as e:
+            last_exception = e
+            await safe_log('warning', f'Tentative {attempt}/{max_retries} échouée: {str(e)}')
+            
+            if attempt < max_retries:
+                await safe_log('info', f'Nouvelle tentative dans {delay} secondes...')
+                await asyncio.sleep(delay)
+            else:
+                await safe_log('error', f'Toutes les {max_retries} tentatives ont échoué')
+    
+    # Si on arrive ici, toutes les tentatives ont échoué
+    raise last_exception
+
+
 class EcommerceScraper:
     """Orchestrateur principal pour le scraping multi-plateformes."""
     
@@ -68,41 +114,53 @@ class EcommerceScraper:
             self.scrapers['shopify'] = ShopifyScraper(max_results=max_per_platform, domains=domains)
     
     async def scrape_all_platforms(self) -> List[Dict[str, Any]]:
-        """Lance le scraping sur toutes les plateformes sélectionnées."""
-        all_products = []
+        """Lance le scraping sur toutes les plateformes sélectionnées avec retry automatique."""
+        async def execute_scraping():
+            all_products = []
+            
+            for search_term in self.search_terms:
+                await safe_log('info', f'Recherche pour le terme: {search_term}')
+                
+                # Lancer le scraping en parallèle sur toutes les plateformes
+                tasks = []
+                for platform, scraper in self.scrapers.items():
+                    task = self._scrape_platform(platform, scraper, search_term)
+                    tasks.append(task)
+                
+                # Attendre que tous les scrapers terminent
+                platform_results = await asyncio.gather(*tasks, return_exceptions=True)
+                
+                # Traiter les résultats
+                for i, result in enumerate(platform_results):
+                    platform = list(self.scrapers.keys())[i]
+                    if isinstance(result, Exception):
+                        await safe_log('error', f'Erreur sur {platform}: {str(result)}')
+                    else:
+                        self.results[platform].extend(result)
+                        all_products.extend([product.to_dict() for product in result])
+            
+            return all_products
         
-        for search_term in self.search_terms:
-            await safe_log('info', f'Recherche pour le terme: {search_term}')
-            
-            # Lancer le scraping en parallèle sur toutes les plateformes
-            tasks = []
-            for platform, scraper in self.scrapers.items():
-                task = self._scrape_platform(platform, scraper, search_term)
-                tasks.append(task)
-            
-            # Attendre que tous les scrapers terminent
-            platform_results = await asyncio.gather(*tasks, return_exceptions=True)
-            
-            # Traiter les résultats
-            for i, result in enumerate(platform_results):
-                platform = list(self.scrapers.keys())[i]
-                if isinstance(result, Exception):
-                    await safe_log('error', f'Erreur sur {platform}: {str(result)}')
-                else:
-                    self.results[platform].extend(result)
-                    all_products.extend([product.to_dict() for product in result])
-        
-        return all_products
-    
-    async def _scrape_platform(self, platform: str, scraper, search_term: str):
-        """Scrape une plateforme spécifique."""
         try:
+            # Utilisation du système de retry pour l'ensemble du processus
+            return await retry_on_error(execute_scraping, max_retries=3, delay=5.0)
+        except Exception as e:
+            await safe_log('error', f'Échec complet du scraping après toutes les tentatives: {str(e)}')
+            return []
+    
+    async def _scrape_platform(self, platform: str, scraper, search_term: str) -> list:
+        """Scrape une plateforme spécifique avec gestion d'erreurs et retry automatique."""
+        async def scrape_with_context():
             async with scraper:
                 products = await scraper.search_products(search_term)
                 await safe_log('info', f'{platform}: {len(products)} produits trouvés pour "{search_term}"')
                 return products
+        
+        try:
+            # Utilisation du système de retry pour plus de robustesse
+            return await retry_on_error(scrape_with_context, max_retries=20, delay=2.0)
         except Exception as e:
-            await safe_log('error', f'Erreur lors du scraping {platform}: {str(e)}')
+            await safe_log('error', f'Échec définitif du scraping {platform} après 20 tentatives: {str(e)}')
             return []
     
     def analyze_prices(self, products: List[Dict[str, Any]]) -> Dict[str, Any]:
