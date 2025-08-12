@@ -14,8 +14,6 @@ pandas
 numpy
 urllib3
 # Anti-detection libraries
-rotating-proxies
 httpx-socks
 user-agents
-requests-html
 cloudscraper
