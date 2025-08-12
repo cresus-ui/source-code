@@ -22,6 +22,15 @@ from .scrapers import (
 )
 
 
+async def safe_log(level: str, message: str):
+    """Fonction utilitaire pour le logging sécurisé."""
+    if Actor.log:
+        log_func = getattr(Actor.log, level)
+        await log_func(message)
+    else:
+        print(f'[{level.upper()}] {message}')
+
+
 class EcommerceScraper:
     """Orchestrateur principal pour le scraping multi-plateformes."""
     
@@ -63,7 +72,7 @@ class EcommerceScraper:
         all_products = []
         
         for search_term in self.search_terms:
-            await Actor.log.info(f'Recherche pour le terme: {search_term}')
+            await safe_log('info', f'Recherche pour le terme: {search_term}')
             
             # Lancer le scraping en parallèle sur toutes les plateformes
             tasks = []
@@ -78,7 +87,7 @@ class EcommerceScraper:
             for i, result in enumerate(platform_results):
                 platform = list(self.scrapers.keys())[i]
                 if isinstance(result, Exception):
-                    await Actor.log.error(f'Erreur sur {platform}: {str(result)}')
+                    await safe_log('error', f'Erreur sur {platform}: {str(result)}')
                 else:
                     self.results[platform].extend(result)
                     all_products.extend([product.to_dict() for product in result])
@@ -90,10 +99,10 @@ class EcommerceScraper:
         try:
             async with scraper:
                 products = await scraper.search_products(search_term)
-                await Actor.log.info(f'{platform}: {len(products)} produits trouvés pour "{search_term}"')
+                await safe_log('info', f'{platform}: {len(products)} produits trouvés pour "{search_term}"')
                 return products
         except Exception as e:
-            await Actor.log.error(f'Erreur lors du scraping {platform}: {str(e)}')
+            await safe_log('error', f'Erreur lors du scraping {platform}: {str(e)}')
             return []
     
     def analyze_prices(self, products: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -235,7 +244,7 @@ async def main() -> None:
             'trackTrends': False
         }
         
-        await Actor.log.info(f'Configuration reçue: {actor_input}')
+        await safe_log('info', f'Configuration reçue: {actor_input}')
         
         # Validation des paramètres
         if not actor_input.get('platforms'):
@@ -248,7 +257,7 @@ async def main() -> None:
         scraper = EcommerceScraper(actor_input)
         await scraper.initialize_scrapers()
         
-        await Actor.log.info(f'Scrapers initialisés pour: {", ".join(scraper.platforms)}')
+        await safe_log('info', f'Scrapers initialisés pour: {", ".join(scraper.platforms)}')
         
         # Lancement du scraping
         products = await scraper.scrape_all_platforms()
@@ -256,7 +265,7 @@ async def main() -> None:
         # Génération du rapport
         report = await scraper.generate_report(products)
         
-        await Actor.log.info(f'Scraping terminé: {len(products)} produits trouvés')
+        await safe_log('info', f'Scraping terminé: {len(products)} produits trouvés')
         
         # Sauvegarde des résultats
         await Actor.push_data(report)
