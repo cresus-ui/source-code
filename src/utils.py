@@ -13,7 +13,8 @@ async def safe_log(level: str, message: str):
                 if log_func is not None and callable(log_func):
                     try:
                         result = log_func(message)
-                        if result is not None:
+                        # Vérifier si le résultat est awaitable avant d'essayer de l'attendre
+                        if result is not None and hasattr(result, '__await__'):
                             await result
                         return
                     except Exception:
