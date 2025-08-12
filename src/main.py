@@ -25,8 +25,11 @@ from .scrapers import (
 async def safe_log(level: str, message: str):
     """Fonction utilitaire pour le logging sécurisé."""
     if Actor.log:
-        log_func = getattr(Actor.log, level)
-        await log_func(message)
+        log_func = getattr(Actor.log, level, None)
+        if log_func and callable(log_func):
+            await log_func(message)
+        else:
+            print(f'[{level.upper()}] {message}')
     else:
         print(f'[{level.upper()}] {message}')
 
