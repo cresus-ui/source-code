@@ -16,36 +16,91 @@ class AmazonScraper(BaseScraper):
         super().__init__(max_results)
         self.domain = domain
         self.base_url = f'https://www.{domain}'
+        # URLs alternatives pour éviter la détection
+        self.search_endpoints = [
+            '/s?k={}&ref=sr_pg_1',
+            '/s?k={}&i=aps&ref=nb_sb_noss',
+            '/s?k={}&field-keywords={}'
+        ]
     
     def get_platform_name(self) -> str:
         return 'Amazon'
     
     async def search_products(self, search_term: str) -> List[Product]:
-        """Recherche des produits sur Amazon."""
+        """Recherche des produits sur Amazon avec techniques anti-détection."""
         products = []
         
         try:
-            # Construction de l'URL de recherche
-            search_url = f'{self.base_url}/s?k={quote_plus(search_term)}&ref=sr_pg_1'
-            Actor.log.info(f'Recherche Amazon: {search_url}')
+            # Ajouter des headers spécifiques à Amazon
+            amazon_headers = {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Referer': f'https://www.{self.domain}/',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'same-origin'
+            }
             
-            soup = await self.get_page_content(search_url)
-            if not soup:
-                return products
+            # Mettre à jour les headers de session
+            self.session.headers.update(amazon_headers)
             
-            # Sélecteurs pour les résultats de recherche Amazon
-            product_containers = soup.find_all('div', {'data-component-type': 's-search-result'})
+            # Essayer différents endpoints de recherche
+            for i, endpoint in enumerate(self.search_endpoints):
+                try:
+                    if '{}' in endpoint.count('{}') == 2:
+                        search_url = f'{self.base_url}{endpoint.format(quote_plus(search_term), quote_plus(search_term))}'
+                    else:
+                        search_url = f'{self.base_url}{endpoint.format(quote_plus(search_term))}'
+                    
+                    await Actor.log.info(f'Tentative Amazon endpoint {i+1}: {search_url}')
+                    
+                    # Délai aléatoire avant chaque requête
+                    await self.random_delay(3.0, 8.0)
+                    
+                    soup = await self.get_page_content(search_url)
+                    if not soup:
+                        continue
+                    
+                    # Vérifier si on a été bloqué
+                    if soup.find('img', {'alt': 'captcha'}) or 'robot' in soup.get_text().lower():
+                        await Actor.log.warning(f'CAPTCHA détecté sur Amazon, essai endpoint suivant')
+                        continue
+                    
+                    # Sélecteurs pour les résultats de recherche Amazon
+                    product_containers = soup.find_all('div', {'data-component-type': 's-search-result'})
+                    
+                    if not product_containers:
+                        # Essayer d'autres sélecteurs
+                        product_containers = soup.find_all('div', {'data-asin': True})
+                    
+                    if product_containers:
+                        await Actor.log.info(f'Trouvé {len(product_containers)} conteneurs de produits')
+                        
+                        for container in product_containers[:self.max_results]:
+                            product = await self._extract_product_info(container)
+                            if product:
+                                products.append(product)
+                                await Actor.log.info(f'Produit Amazon extrait: {product.title[:50]}...')
+                            
+                            # Petit délai entre extractions
+                            await self.random_delay(0.5, 2.0)
+                        
+                        break  # Succès, sortir de la boucle
+                    else:
+                        await Actor.log.warning(f'Aucun conteneur de produit trouvé avec endpoint {i+1}')
+                        
+                except Exception as e:
+                    await Actor.log.error(f'Erreur avec endpoint {i+1}: {str(e)}')
+                    continue
             
-            for container in product_containers[:self.max_results]:
-                product = await self._extract_product_info(container)
-                if product:
-                    products.append(product)
-                    Actor.log.info(f'Produit Amazon extrait: {product.title[:50]}...')
-            
-            Actor.log.info(f'Total produits Amazon trouvés: {len(products)}')
+            await Actor.log.info(f'Total produits Amazon trouvés: {len(products)}')
             
         except Exception as e:
-            Actor.log.error(f'Erreur lors du scraping Amazon: {str(e)}')
+            await Actor.log.error(f'Erreur lors du scraping Amazon: {str(e)}')
         
         return products
     

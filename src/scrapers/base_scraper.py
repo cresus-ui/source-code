@@ -11,6 +11,30 @@ from httpx import AsyncClient
 from bs4 import BeautifulSoup
 from apify import Actor
 
+try:
+    from ..config.anti_detection import AntiDetectionConfig
+except ImportError:
+    # Fallback si le module n'est pas trouvé
+    class AntiDetectionConfig:
+        @staticmethod
+        def get_random_user_agent():
+            return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        
+        @staticmethod
+        def generate_realistic_headers(platform=None, base_url=None):
+            return {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            }
+        
+        @staticmethod
+        def get_platform_delay(platform):
+            return 2.0, 8.0
+        
+        @staticmethod
+        def get_block_indicators(platform):
+            return ['captcha', 'blocked', 'access denied']
+
 
 @dataclass
 class Product:
@@ -59,18 +83,26 @@ class BaseScraper(ABC):
         self.max_results = max_results
         self.ua = UserAgent()
         self.session = None
+        self.user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        ]
         
     async def __aenter__(self):
-        """Initialise la session HTTP."""
-        headers = {
-            'User-Agent': self.ua.random,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate',
-            'Connection': 'keep-alive',
-        }
-        self.session = AsyncClient(headers=headers, follow_redirects=True, timeout=30.0)
+        """Initialise la session HTTP avec des headers anti-détection."""
+        self.session = AsyncClient(
+            headers=self.get_random_headers(),
+            timeout=30.0,
+            follow_redirects=True
+        )
         return self
+    
+    def get_random_headers(self, platform: str = None, base_url: str = None) -> Dict[str, str]:
+        """Génère des headers HTTP aléatoires pour éviter la détection."""
+        return AntiDetectionConfig.generate_realistic_headers(platform, base_url)
         
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Ferme la session HTTP."""
@@ -87,9 +119,20 @@ class BaseScraper(ABC):
         """Retourne le nom de la plateforme."""
         pass
     
-    async def random_delay(self, min_seconds: float = 1.0, max_seconds: float = 3.0):
+    async def random_delay(self, min_seconds: float = None, max_seconds: float = None, platform: str = None):
         """Ajoute un délai aléatoire pour éviter la détection."""
-        delay = random.uniform(min_seconds, max_seconds)
+        # Utiliser les délais spécifiques à la plateforme si disponibles
+        if platform and min_seconds is None and max_seconds is None:
+            min_seconds, max_seconds = AntiDetectionConfig.get_platform_delay(platform)
+        elif min_seconds is None or max_seconds is None:
+            min_seconds, max_seconds = 2.0, 8.0
+        
+        # Délai de base avec variation gaussienne pour plus de réalisme
+        base_delay = random.uniform(min_seconds, max_seconds)
+        gaussian_variation = random.gauss(0, 0.5)
+        delay = max(0.5, base_delay + gaussian_variation)
+        
+        await Actor.log.info(f"Attente de {delay:.2f} secondes...")
         await asyncio.sleep(delay)
     
     def extract_price(self, price_text: str) -> Optional[float]:
@@ -135,19 +178,53 @@ class BaseScraper(ABC):
                 return None
         return None
     
-    async def get_page_content(self, url: str) -> Optional[BeautifulSoup]:
-        """Récupère et parse le contenu d'une page."""
-        try:
-            await self.random_delay()
-            response = await self.session.get(url)
-            response.raise_for_status()
-            
-            soup = BeautifulSoup(response.content, 'lxml')
-            return soup
-            
-        except Exception as e:
-            Actor.log.warning(f'Erreur lors du chargement de {url}: {str(e)}')
-            return None
+    async def get_page_content(self, url: str, max_retries: int = 3) -> Optional[BeautifulSoup]:
+        """Récupère le contenu d'une page web avec retry et anti-détection."""
+        for attempt in range(max_retries):
+            try:
+                # Rotation des headers à chaque tentative
+                if attempt > 0:
+                    self.session.headers.update(self.get_random_headers())
+                    await self.random_delay(3.0, 10.0)  # Délai plus long entre les tentatives
+                
+                await Actor.log.info(f"Tentative {attempt + 1}/{max_retries} pour {url}")
+                
+                response = await self.session.get(url)
+                
+                if response.status_code == 403:
+                    await Actor.log.warning(f"Accès refusé (403) pour {url}, tentative {attempt + 1}")
+                    if attempt < max_retries - 1:
+                        await self.random_delay(5.0, 15.0)
+                        continue
+                    
+                elif response.status_code == 429:
+                    await Actor.log.warning(f"Trop de requêtes (429) pour {url}, attente plus longue")
+                    if attempt < max_retries - 1:
+                        await self.random_delay(10.0, 30.0)
+                        continue
+                
+                response.raise_for_status()
+                
+                # Vérifier si la page contient des indicateurs de détection
+                content = response.text
+                if any(indicator in content.lower() for indicator in [
+                    'captcha', 'robot', 'blocked', 'access denied', 
+                    'security check', 'unusual traffic'
+                ]):
+                    await Actor.log.warning(f"Détection possible sur {url}, rotation des headers")
+                    if attempt < max_retries - 1:
+                        continue
+                
+                return BeautifulSoup(content, 'html.parser')
+                
+            except Exception as e:
+                await Actor.log.error(f"Erreur tentative {attempt + 1} pour {url}: {e}")
+                if attempt < max_retries - 1:
+                    await self.random_delay(2.0, 8.0)
+                    continue
+        
+        await Actor.log.error(f"Échec de récupération après {max_retries} tentatives pour {url}")
+        return None
     
     def clean_text(self, text: str) -> str:
         """Nettoie et normalise le texte."""

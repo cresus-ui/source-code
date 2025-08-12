@@ -15,37 +15,101 @@ class EtsyScraper(BaseScraper):
     def __init__(self, max_results: int = 50):
         super().__init__(max_results)
         self.base_url = 'https://www.etsy.com'
+        # URLs alternatives pour éviter la détection
+        self.search_endpoints = [
+            '/search?q={}&ref=search_bar',
+            '/search?q={}&order=most_relevant',
+            '/search?q={}&explicit=1',
+            '/c/{}?q={}'
+        ]
     
     def get_platform_name(self) -> str:
         return 'Etsy'
     
     async def search_products(self, search_term: str) -> List[Product]:
-        """Recherche des produits sur Etsy."""
+        """Recherche des produits sur Etsy avec techniques anti-détection."""
         products = []
         
         try:
-            # Construction de l'URL de recherche Etsy
-            search_url = f'{self.base_url}/search?q={quote_plus(search_term)}'
-            Actor.log.info(f'Recherche Etsy: {search_url}')
+            # Ajouter des headers spécifiques à Etsy
+            etsy_headers = {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Referer': 'https://www.etsy.com/',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'same-origin',
+                'Sec-Fetch-User': '?1'
+            }
             
-            soup = await self.get_page_content(search_url)
-            if not soup:
-                return products
+            # Mettre à jour les headers de session
+            self.session.headers.update(etsy_headers)
             
-            # Sélecteurs pour les résultats de recherche Etsy
-            product_containers = soup.find_all('div', {'data-test-id': 'listing-card'})
+            # Essayer différents endpoints de recherche
+            for i, endpoint in enumerate(self.search_endpoints):
+                try:
+                    if endpoint.count('{}') == 2:
+                        # Pour les endpoints avec catégorie
+                        search_url = f'{self.base_url}{endpoint.format(quote_plus(search_term), quote_plus(search_term))}'
+                    else:
+                        search_url = f'{self.base_url}{endpoint.format(quote_plus(search_term))}'
+                    
+                    await Actor.log.info(f'Tentative Etsy endpoint {i+1}: {search_url}')
+                    
+                    # Délai aléatoire avant chaque requête
+                    await self.random_delay(4.0, 10.0)
+                    
+                    soup = await self.get_page_content(search_url)
+                    if not soup:
+                        continue
+                    
+                    # Vérifier si on a été bloqué
+                    page_text = soup.get_text().lower()
+                    if any(block_indicator in page_text for block_indicator in [
+                        'captcha', 'robot', 'blocked', 'access denied', 
+                        'security check', 'unusual traffic', 'rate limit'
+                    ]):
+                        await Actor.log.warning(f'Blocage détecté sur Etsy, essai endpoint suivant')
+                        continue
+                    
+                    # Sélecteurs pour les résultats de recherche Etsy
+                    product_containers = soup.find_all('div', {'data-test-id': 'listing-card'})
+                    
+                    # Fallback avec d'autres sélecteurs
+                    if not product_containers:
+                        product_containers = soup.find_all('div', class_='v2-listing-card')
+                    
+                    if not product_containers:
+                        product_containers = soup.find_all('div', class_='listing-card')
+                    
+                    if not product_containers:
+                        product_containers = soup.find_all('article', {'data-test-id': True})
+                    
+                    if product_containers:
+                        await Actor.log.info(f'Trouvé {len(product_containers)} conteneurs de produits Etsy')
+                        
+                        for container in product_containers[:self.max_results]:
+                            product = await self._extract_product_info(container)
+                            if product:
+                                products.append(product)
+                                await Actor.log.info(f'Produit Etsy extrait: {product.title[:50]}...')
+                            
+                            # Petit délai entre extractions
+                            await self.random_delay(1.0, 3.0)
+                        
+                        break  # Succès, sortir de la boucle
+                    else:
+                        await Actor.log.warning(f'Aucun conteneur de produit trouvé avec endpoint {i+1}')
+                        
+                except Exception as e:
+                    await Actor.log.error(f'Erreur avec endpoint Etsy {i+1}: {str(e)}')
+                    continue
             
-            # Fallback si le premier sélecteur ne fonctionne pas
-            if not product_containers:
-                product_containers = soup.find_all('div', class_='v2-listing-card')
-            
-            for container in product_containers[:self.max_results]:
-                product = await self._extract_product_info(container)
-                if product:
-                    products.append(product)
-                    Actor.log.info(f'Produit Etsy extrait: {product.title[:50]}...')
-            
-            Actor.log.info(f'Total produits Etsy trouvés: {len(products)}')
+            await Actor.log.info(f'Total produits Etsy trouvés: {len(products)}')
             
         except Exception as e:
             Actor.log.error(f'Erreur lors du scraping Etsy: {str(e)}')
