@@ -8,11 +8,8 @@ from apify import Actor
 
 from .base_scraper import BaseScraper, Product
 
-# Import de la fonction safe_log depuis main.py
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from main import safe_log
+# Import de la fonction safe_log depuis utils
+from ..utils import safe_log
 
 
 class ShopifyScraper(BaseScraper):
