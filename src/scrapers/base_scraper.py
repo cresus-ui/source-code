@@ -11,6 +11,8 @@ from httpx import AsyncClient
 from bs4 import BeautifulSoup
 from apify import Actor
 
+from ..utils import safe_log
+
 try:
     from ..config.anti_detection import AntiDetectionConfig
 except ImportError:
@@ -132,7 +134,7 @@ class BaseScraper(ABC):
         gaussian_variation = random.gauss(0, 0.5)
         delay = max(0.5, base_delay + gaussian_variation)
         
-        await Actor.log.info(f"Attente de {delay:.2f} secondes...")
+        await safe_log('info', f"Attente de {delay:.2f} secondes...")
         await asyncio.sleep(delay)
     
     def extract_price(self, price_text: str) -> Optional[float]:
@@ -181,7 +183,7 @@ class BaseScraper(ABC):
     async def get_page_content(self, url: str, max_retries: int = 3) -> Optional[BeautifulSoup]:
         """Récupère le contenu d'une page web avec retry et anti-détection."""
         if not self.session:
-            await Actor.log.error("Session non initialisée. Utilisez 'async with scraper:' pour initialiser.")
+            await safe_log('error', "Session non initialisée. Utilisez 'async with scraper:' pour initialiser.")
             return None
             
         for attempt in range(max_retries):
@@ -191,18 +193,18 @@ class BaseScraper(ABC):
                     self.session.headers.update(self.get_random_headers())
                     await self.random_delay(3.0, 10.0)  # Délai plus long entre les tentatives
                 
-                await Actor.log.info(f"Tentative {attempt + 1}/{max_retries} pour {url}")
+                await safe_log('info', f"Tentative {attempt + 1}/{max_retries} pour {url}")
                 
                 response = await self.session.get(url)
                 
                 if response.status_code == 403:
-                    await Actor.log.warning(f"Accès refusé (403) pour {url}, tentative {attempt + 1}")
+                    await safe_log('warning', f"Accès refusé (403) pour {url}, tentative {attempt + 1}")
                     if attempt < max_retries - 1:
                         await self.random_delay(5.0, 15.0)
                         continue
                     
                 elif response.status_code == 429:
-                    await Actor.log.warning(f"Trop de requêtes (429) pour {url}, attente plus longue")
+                    await safe_log('warning', f"Trop de requêtes (429) pour {url}, attente plus longue")
                     if attempt < max_retries - 1:
                         await self.random_delay(10.0, 30.0)
                         continue
@@ -215,19 +217,19 @@ class BaseScraper(ABC):
                     'captcha', 'robot', 'blocked', 'access denied', 
                     'security check', 'unusual traffic'
                 ]):
-                    await Actor.log.warning(f"Détection possible sur {url}, rotation des headers")
+                    await safe_log('warning', f"Détection possible sur {url}, rotation des headers")
                     if attempt < max_retries - 1:
                         continue
                 
                 return BeautifulSoup(content, 'html.parser')
                 
             except Exception as e:
-                await Actor.log.error(f"Erreur tentative {attempt + 1} pour {url}: {e}")
+                await safe_log('error', f"Erreur tentative {attempt + 1} pour {url}: {e}")
                 if attempt < max_retries - 1:
                     await self.random_delay(2.0, 8.0)
                     continue
         
-        await Actor.log.error(f"Échec de récupération après {max_retries} tentatives pour {url}")
+        await safe_log('error', f"Échec de récupération après {max_retries} tentatives pour {url}")
         return None
     
     def clean_text(self, text: str) -> str:

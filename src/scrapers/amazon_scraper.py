@@ -220,5 +220,5 @@ class AmazonScraper(BaseScraper):
             return details
             
         except Exception as e:
-            await Actor.log.warning(f'Erreur récupération détails Amazon: {str(e)}')
+            await safe_log('warning', f'Erreur récupération détails Amazon: {str(e)}')
             return None

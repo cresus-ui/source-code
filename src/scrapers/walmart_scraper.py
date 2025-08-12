@@ -8,6 +8,9 @@ from apify import Actor
 
 from .base_scraper import BaseScraper, Product
 
+# Import de la fonction safe_log depuis utils
+from ..utils import safe_log
+
 
 class WalmartScraper(BaseScraper):
     """Scraper spécialisé pour Walmart."""
@@ -26,7 +29,7 @@ class WalmartScraper(BaseScraper):
         try:
             # Construction de l'URL de recherche Walmart
             search_url = f'{self.base_url}/search?q={quote_plus(search_term)}'
-            await Actor.log.info(f'Recherche Walmart: {search_url}')
+            await safe_log('info', f'Recherche Walmart: {search_url}')
             
             soup = await self.get_page_content(search_url)
             if not soup:
@@ -43,12 +46,12 @@ class WalmartScraper(BaseScraper):
                 product = await self._extract_product_info(container)
                 if product:
                     products.append(product)
-                    await Actor.log.info(f'Produit Walmart extrait: {product.title[:50]}...')
+                    await safe_log('info', f'Produit Walmart extrait: {product.title[:50]}...')
             
-            await Actor.log.info(f'Total produits Walmart trouvés: {len(products)}')
+            await safe_log('info', f'Total produits Walmart trouvés: {len(products)}')
             
         except Exception as e:
-            await Actor.log.error(f'Erreur lors du scraping Walmart: {str(e)}')
+            await safe_log('error', f'Erreur lors du scraping Walmart: {str(e)}')
         
         return products
     
@@ -156,7 +159,7 @@ class WalmartScraper(BaseScraper):
             )
             
         except Exception as e:
-            await Actor.log.warning(f'Erreur extraction produit Walmart: {str(e)}')
+            await safe_log('warning', f'Erreur extraction produit Walmart: {str(e)}')
             return None
     
     async def get_product_details(self, product_url: str) -> Optional[dict]:
@@ -198,5 +201,5 @@ class WalmartScraper(BaseScraper):
             return details
             
         except Exception as e:
-            await Actor.log.warning(f'Erreur récupération détails Walmart: {str(e)}')
+            await safe_log('warning', f'Erreur récupération détails Walmart: {str(e)}')
             return None

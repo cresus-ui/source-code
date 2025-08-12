@@ -180,5 +180,5 @@ class EbayScraper(BaseScraper):
             return details
             
         except Exception as e:
-            await Actor.log.warning(f'Erreur récupération détails eBay: {str(e)}')
+            await safe_log('warning', f'Erreur récupération détails eBay: {str(e)}')
             return None

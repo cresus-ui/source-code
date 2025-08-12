@@ -280,5 +280,5 @@ class EtsyScraper(BaseScraper):
             return details
             
         except Exception as e:
-            await Actor.log.warning(f'Erreur récupération détails Etsy: {str(e)}')
+            await safe_log('warning', f'Erreur récupération détails Etsy: {str(e)}')
             return None
