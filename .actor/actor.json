@@ -1,0 +1,13 @@
+{
+    "actorSpecification": 1,
+    "name": "ecommerce-multi-platform-scraper",
+    "title": "Scraper e-commerce multi-plateformes",
+    "description": "Scraper automatique pour Amazon, eBay, Walmart, Etsy, Shopify avec suivi des prix, stocks et tendances.",
+    "version": "1.0",
+    "buildTag": "latest",
+    "meta": {
+        "templateId": "python-start"
+    },
+    "input": "./input_schema.json",
+    "dockerfile": "../Dockerfile"
+}

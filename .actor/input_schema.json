@@ -1,0 +1,66 @@
+{
+    "title": "Configuration du scraper e-commerce multi-plateformes",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "platforms": {
+            "title": "Plateformes à scraper",
+            "type": "array",
+            "description": "Sélectionnez les plateformes e-commerce à scraper",
+            "editor": "select",
+            "items": {
+                "type": "string",
+                "enum": ["amazon", "ebay", "walmart", "etsy", "shopify"]
+            },
+            "default": ["amazon"],
+            "uniqueItems": true
+        },
+        "searchTerms": {
+            "title": "Termes de recherche",
+            "type": "array",
+            "description": "Liste des produits ou termes à rechercher",
+            "editor": "stringList",
+            "items": {
+                "type": "string"
+            },
+            "default": ["smartphone"]
+        },
+        "maxResults": {
+            "title": "Nombre maximum de résultats par plateforme",
+            "type": "integer",
+            "description": "Limite le nombre de produits à scraper par plateforme",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 50
+        },
+        "trackPrices": {
+            "title": "Suivi des prix",
+            "type": "boolean",
+            "description": "Activer le suivi automatique des prix",
+            "default": true
+        },
+        "trackStock": {
+            "title": "Suivi des stocks",
+            "type": "boolean",
+            "description": "Activer le suivi de la disponibilité des stocks",
+            "default": true
+        },
+        "trackTrends": {
+            "title": "Analyse des tendances",
+            "type": "boolean",
+            "description": "Activer l'analyse des tendances de vente",
+            "default": false
+        },
+        "shopifyDomains": {
+            "title": "Domaines Shopify (optionnel)",
+            "type": "array",
+            "description": "Liste des domaines Shopify spécifiques à scraper",
+            "editor": "stringList",
+            "items": {
+                "type": "string"
+            },
+            "default": []
+        }
+    },
+    "required": ["platforms", "searchTerms"]
+}
