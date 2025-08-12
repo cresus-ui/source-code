@@ -51,7 +51,7 @@ class AmazonScraper(BaseScraper):
             # Essayer différents endpoints de recherche
             for i, endpoint in enumerate(self.search_endpoints):
                 try:
-                    if '{}' in endpoint.count('{}') == 2:
+                    if endpoint.count('{}') == 2:
                         search_url = f'{self.base_url}{endpoint.format(quote_plus(search_term), quote_plus(search_term))}'
                     else:
                         search_url = f'{self.base_url}{endpoint.format(quote_plus(search_term))}'
@@ -187,7 +187,7 @@ class AmazonScraper(BaseScraper):
             )
             
         except Exception as e:
-            Actor.log.warning(f'Erreur extraction produit Amazon: {str(e)}')
+            await Actor.log.warning(f'Erreur extraction produit Amazon: {str(e)}')
             return None
     
     async def get_product_details(self, product_url: str) -> Optional[dict]:
@@ -217,5 +217,5 @@ class AmazonScraper(BaseScraper):
             return details
             
         except Exception as e:
-            Actor.log.warning(f'Erreur récupération détails Amazon: {str(e)}')
+            await Actor.log.warning(f'Erreur récupération détails Amazon: {str(e)}')
             return None

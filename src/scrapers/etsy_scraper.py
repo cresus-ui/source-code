@@ -112,7 +112,7 @@ class EtsyScraper(BaseScraper):
             await Actor.log.info(f'Total produits Etsy trouvés: {len(products)}')
             
         except Exception as e:
-            Actor.log.error(f'Erreur lors du scraping Etsy: {str(e)}')
+            await Actor.log.error(f'Erreur lors du scraping Etsy: {str(e)}')
         
         return products
     
@@ -231,7 +231,7 @@ class EtsyScraper(BaseScraper):
             )
             
         except Exception as e:
-            Actor.log.warning(f'Erreur extraction produit Etsy: {str(e)}')
+            await Actor.log.warning(f'Erreur extraction produit Etsy: {str(e)}')
             return None
     
     async def get_product_details(self, product_url: str) -> Optional[dict]:
@@ -277,5 +277,5 @@ class EtsyScraper(BaseScraper):
             return details
             
         except Exception as e:
-            Actor.log.warning(f'Erreur récupération détails Etsy: {str(e)}')
+            await Actor.log.warning(f'Erreur récupération détails Etsy: {str(e)}')
             return None

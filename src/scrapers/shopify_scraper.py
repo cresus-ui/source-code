@@ -47,7 +47,7 @@ class ShopifyScraper(BaseScraper):
             
             # Construction de l'URL de recherche Shopify
             search_url = f'{base_url}/search?q={quote_plus(search_term)}&type=product'
-            Actor.log.info(f'Recherche Shopify sur {domain}: {search_url}')
+            await Actor.log.info(f'Recherche Shopify sur {domain}: {search_url}')
             
             soup = await self.get_page_content(search_url)
             if not soup:
@@ -67,12 +67,12 @@ class ShopifyScraper(BaseScraper):
                 product = await self._extract_product_info(container, base_url)
                 if product:
                     products.append(product)
-                    Actor.log.info(f'Produit Shopify extrait: {product.title[:50]}...')
+                    await Actor.log.info(f'Produit Shopify extrait: {product.title[:50]}...')
             
-            Actor.log.info(f'Total produits Shopify trouvés sur {domain}: {len(products)}')
+            await Actor.log.info(f'Total produits Shopify trouvés sur {domain}: {len(products)}')
             
         except Exception as e:
-            Actor.log.error(f'Erreur lors du scraping Shopify sur {domain}: {str(e)}')
+            await Actor.log.error(f'Erreur lors du scraping Shopify sur {domain}: {str(e)}')
         
         return products
     
@@ -92,7 +92,7 @@ class ShopifyScraper(BaseScraper):
                             products.append(product)
             
         except Exception as e:
-            Actor.log.warning(f'Erreur API Shopify: {str(e)}')
+            await Actor.log.warning(f'Erreur API Shopify: {str(e)}')
         
         return products
     
@@ -210,7 +210,7 @@ class ShopifyScraper(BaseScraper):
             )
             
         except Exception as e:
-            Actor.log.warning(f'Erreur extraction produit Shopify: {str(e)}')
+            await Actor.log.warning(f'Erreur extraction produit Shopify: {str(e)}')
             return None
     
     async def _extract_product_from_api(self, item: dict, base_url: str) -> Optional[Product]:
@@ -249,7 +249,7 @@ class ShopifyScraper(BaseScraper):
             )
             
         except Exception as e:
-            Actor.log.warning(f'Erreur extraction produit API Shopify: {str(e)}')
+            await Actor.log.warning(f'Erreur extraction produit API Shopify: {str(e)}')
             return None
     
     async def get_product_details(self, product_url: str) -> Optional[dict]:
@@ -285,5 +285,5 @@ class ShopifyScraper(BaseScraper):
             return details
             
         except Exception as e:
-            Actor.log.warning(f'Erreur récupération détails Shopify: {str(e)}')
+            await Actor.log.warning(f'Erreur récupération détails Shopify: {str(e)}')
             return None

@@ -63,7 +63,7 @@ class EcommerceScraper:
         all_products = []
         
         for search_term in self.search_terms:
-            Actor.log.info(f'Recherche pour le terme: {search_term}')
+            await Actor.log.info(f'Recherche pour le terme: {search_term}')
             
             # Lancer le scraping en parallèle sur toutes les plateformes
             tasks = []
@@ -78,7 +78,7 @@ class EcommerceScraper:
             for i, result in enumerate(platform_results):
                 platform = list(self.scrapers.keys())[i]
                 if isinstance(result, Exception):
-                    Actor.log.error(f'Erreur sur {platform}: {str(result)}')
+                    await Actor.log.error(f'Erreur sur {platform}: {str(result)}')
                 else:
                     self.results[platform].extend(result)
                     all_products.extend([product.to_dict() for product in result])
@@ -90,10 +90,10 @@ class EcommerceScraper:
         try:
             async with scraper:
                 products = await scraper.search_products(search_term)
-                Actor.log.info(f'{platform}: {len(products)} produits trouvés pour "{search_term}"')
+                await Actor.log.info(f'{platform}: {len(products)} produits trouvés pour "{search_term}"')
                 return products
         except Exception as e:
-            Actor.log.error(f'Erreur lors du scraping {platform}: {str(e)}')
+            await Actor.log.error(f'Erreur lors du scraping {platform}: {str(e)}')
             return []
     
     def analyze_prices(self, products: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -235,7 +235,7 @@ async def main() -> None:
             'trackTrends': False
         }
         
-        Actor.log.info(f'Configuration reçue: {actor_input}')
+        await Actor.log.info(f'Configuration reçue: {actor_input}')
         
         # Validation des paramètres
         if not actor_input.get('platforms'):
@@ -248,7 +248,7 @@ async def main() -> None:
         scraper = EcommerceScraper(actor_input)
         await scraper.initialize_scrapers()
         
-        Actor.log.info(f'Scrapers initialisés pour: {", ".join(scraper.platforms)}')
+        await Actor.log.info(f'Scrapers initialisés pour: {", ".join(scraper.platforms)}')
         
         # Lancement du scraping
         products = await scraper.scrape_all_platforms()
@@ -256,7 +256,7 @@ async def main() -> None:
         # Génération du rapport
         report = await scraper.generate_report(products)
         
-        Actor.log.info(f'Scraping terminé: {len(products)} produits trouvés')
+        await Actor.log.info(f'Scraping terminé: {len(products)} produits trouvés')
         
         # Sauvegarde des résultats
         await Actor.push_data(report)

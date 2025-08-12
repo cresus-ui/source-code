@@ -27,7 +27,7 @@ class EbayScraper(BaseScraper):
         try:
             # Construction de l'URL de recherche eBay
             search_url = f'{self.base_url}/sch/i.html?_nkw={quote_plus(search_term)}&_sacat=0'
-            Actor.log.info(f'Recherche eBay: {search_url}')
+            await Actor.log.info(f'Recherche eBay: {search_url}')
             
             soup = await self.get_page_content(search_url)
             if not soup:
@@ -40,12 +40,12 @@ class EbayScraper(BaseScraper):
                 product = await self._extract_product_info(container)
                 if product:
                     products.append(product)
-                    Actor.log.info(f'Produit eBay extrait: {product.title[:50]}...')
+                    await Actor.log.info(f'Produit eBay extrait: {product.title[:50]}...')
             
-            Actor.log.info(f'Total produits eBay trouvés: {len(products)}')
+            await Actor.log.info(f'Total produits eBay trouvés: {len(products)}')
             
         except Exception as e:
-            Actor.log.error(f'Erreur lors du scraping eBay: {str(e)}')
+            await Actor.log.error(f'Erreur lors du scraping eBay: {str(e)}')
         
         return products
     
@@ -140,7 +140,7 @@ class EbayScraper(BaseScraper):
             )
             
         except Exception as e:
-            Actor.log.warning(f'Erreur extraction produit eBay: {str(e)}')
+            await Actor.log.warning(f'Erreur extraction produit eBay: {str(e)}')
             return None
     
     async def get_product_details(self, product_url: str) -> Optional[dict]:
@@ -177,5 +177,5 @@ class EbayScraper(BaseScraper):
             return details
             
         except Exception as e:
-            Actor.log.warning(f'Erreur récupération détails eBay: {str(e)}')
+            await Actor.log.warning(f'Erreur récupération détails eBay: {str(e)}')
             return None

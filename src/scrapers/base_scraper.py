@@ -180,6 +180,10 @@ class BaseScraper(ABC):
     
     async def get_page_content(self, url: str, max_retries: int = 3) -> Optional[BeautifulSoup]:
         """Récupère le contenu d'une page web avec retry et anti-détection."""
+        if not self.session:
+            await Actor.log.error("Session non initialisée. Utilisez 'async with scraper:' pour initialiser.")
+            return None
+            
         for attempt in range(max_retries):
             try:
                 # Rotation des headers à chaque tentative

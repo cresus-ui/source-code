@@ -26,7 +26,7 @@ class WalmartScraper(BaseScraper):
         try:
             # Construction de l'URL de recherche Walmart
             search_url = f'{self.base_url}/search?q={quote_plus(search_term)}'
-            Actor.log.info(f'Recherche Walmart: {search_url}')
+            await Actor.log.info(f'Recherche Walmart: {search_url}')
             
             soup = await self.get_page_content(search_url)
             if not soup:
@@ -43,12 +43,12 @@ class WalmartScraper(BaseScraper):
                 product = await self._extract_product_info(container)
                 if product:
                     products.append(product)
-                    Actor.log.info(f'Produit Walmart extrait: {product.title[:50]}...')
+                    await Actor.log.info(f'Produit Walmart extrait: {product.title[:50]}...')
             
-            Actor.log.info(f'Total produits Walmart trouvés: {len(products)}')
+            await Actor.log.info(f'Total produits Walmart trouvés: {len(products)}')
             
         except Exception as e:
-            Actor.log.error(f'Erreur lors du scraping Walmart: {str(e)}')
+            await Actor.log.error(f'Erreur lors du scraping Walmart: {str(e)}')
         
         return products
     
@@ -156,7 +156,7 @@ class WalmartScraper(BaseScraper):
             )
             
         except Exception as e:
-            Actor.log.warning(f'Erreur extraction produit Walmart: {str(e)}')
+            await Actor.log.warning(f'Erreur extraction produit Walmart: {str(e)}')
             return None
     
     async def get_product_details(self, product_url: str) -> Optional[dict]:
@@ -198,5 +198,5 @@ class WalmartScraper(BaseScraper):
             return details
             
         except Exception as e:
-            Actor.log.warning(f'Erreur récupération détails Walmart: {str(e)}')
+            await Actor.log.warning(f'Erreur récupération détails Walmart: {str(e)}')
             return None
