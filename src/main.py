@@ -24,14 +24,19 @@ from .scrapers import (
 
 async def safe_log(level: str, message: str):
     """Fonction utilitaire pour le logging sécurisé."""
-    if Actor.log:
-        log_func = getattr(Actor.log, level, None)
-        if log_func and callable(log_func):
-            await log_func(message)
-        else:
-            print(f'[{level.upper()}] {message}')
-    else:
-        print(f'[{level.upper()}] {message}')
+    try:
+        if Actor.log and hasattr(Actor.log, level):
+            log_func = getattr(Actor.log, level, None)
+            if log_func and callable(log_func):
+                result = log_func(message)
+                if result is not None:
+                    await result
+                return
+    except Exception:
+        pass
+    
+    # Fallback vers print en cas d'erreur ou si Actor.log n'est pas disponible
+    print(f'[{level.upper()}] {message}')
 
 
 async def retry_on_error(func, *args, max_retries: int = 20, delay: float = 1.0, **kwargs):
