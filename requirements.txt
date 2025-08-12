@@ -12,9 +12,4 @@ fake-useragent
 retrying
 pandas
 numpy
-re
-time
-random
 urllib3
-json
-datetime
