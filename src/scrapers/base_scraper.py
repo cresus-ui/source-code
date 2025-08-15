@@ -45,17 +45,18 @@ class Product:
     price: Optional[float]
     currency: str
     url: str
-    image_url: Optional[str]
-    rating: Optional[float]
-    reviews_count: Optional[int]
     availability: str
-    seller: Optional[str]
     platform: str
-    scraped_at: datetime
+    image_url: Optional[str] = None
+    rating: Optional[float] = None
+    reviews_count: Optional[int] = None
+    seller: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None
     brand: Optional[str] = None
     sku: Optional[str] = None
+    asin: Optional[str] = None  # Amazon Standard Identification Number
+    scraped_at: Optional[str] = None  # Timestamp du scraping
     
     def to_dict(self) -> Dict[str, Any]:
         """Convertit le produit en dictionnaire."""
@@ -70,7 +71,7 @@ class Product:
             'availability': self.availability,
             'seller': self.seller,
             'platform': self.platform,
-            'scraped_at': self.scraped_at.isoformat(),
+            'scraped_at': self.scraped_at if isinstance(self.scraped_at, str) else (self.scraped_at.isoformat() if self.scraped_at else None),
             'description': self.description,
             'category': self.category,
             'brand': self.brand,

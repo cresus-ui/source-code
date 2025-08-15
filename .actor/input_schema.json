@@ -60,6 +60,18 @@
                 "type": "string"
             },
             "default": []
+        },
+        "usePlaywright": {
+            "title": "Utiliser Playwright avec Chromium",
+            "type": "boolean",
+            "description": "Activer Playwright avec Chromium pour de meilleures performances et anti-détection",
+            "default": true
+        },
+        "headless": {
+            "title": "Mode headless",
+            "type": "boolean",
+            "description": "Exécuter le navigateur en mode headless (sans interface graphique)",
+            "default": true
         }
     },
     "required": ["platforms", "searchTerms"]

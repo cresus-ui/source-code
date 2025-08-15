@@ -8,6 +8,26 @@ FROM apify/actor-python:3.13
 # in order to speed up the build
 COPY requirements.txt ./
 
+# Install system dependencies for Playwright and Chromium
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    ca-certificates \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libdrm2 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    xdg-utils \
+    libxss1 \
+    libgconf-2-4 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install the packages specified in requirements.txt,
 # Print the installed Python version, pip version
 # and all installed packages with their versions for debugging
@@ -17,6 +37,8 @@ RUN echo "Python version:" \
  && pip --version \
  && echo "Installing dependencies:" \
  && pip install -r requirements.txt \
+ && echo "Installing Playwright browsers:" \
+ && playwright install chromium \
  && echo "All installed Python packages:" \
  && pip freeze
 

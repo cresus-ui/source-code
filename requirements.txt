@@ -17,3 +17,6 @@ urllib3
 httpx-socks
 user-agents
 cloudscraper
+# Playwright with Chromium for enhanced performance
+playwright>=1.40.0
+playwright-stealth>=1.0.6

@@ -21,6 +21,10 @@ from .scrapers import (
     ShopifyScraper
 )
 
+# Import des nouveaux scrapers Playwright
+from .scrapers.amazon_playwright_scraper import AmazonPlaywrightScraper
+from .scrapers.multi_platform_playwright_scraper import MultiPlatformPlaywrightScraper
+
 
 # Import de safe_log depuis utils
 from .utils import safe_log
@@ -77,13 +81,15 @@ class EcommerceScraper:
     
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-        self.platforms = config.get('platforms', ['amazon'])
+        self.platforms = config.get('platforms', ['amazon', 'ebay', 'walmart', 'etsy', 'shopify'])
         self.search_terms = config.get('searchTerms', ['smartphone'])
         self.max_results = config.get('maxResults', 50)
         self.track_prices = config.get('trackPrices', True)
         self.track_stock = config.get('trackStock', True)
         self.track_trends = config.get('trackTrends', False)
         self.shopify_domains = config.get('shopifyDomains', [])
+        self.use_playwright = config.get('usePlaywright', True)  # Nouveau: utiliser Playwright par défaut
+        self.headless = config.get('headless', True)  # Mode headless pour Playwright
         
         self.scrapers = {}
         self.results = defaultdict(list)
@@ -92,56 +98,143 @@ class EcommerceScraper:
         """Initialise les scrapers pour chaque plateforme sélectionnée."""
         max_per_platform = max(1, self.max_results // len(self.platforms))
         
-        if 'amazon' in self.platforms:
-            self.scrapers['amazon'] = AmazonScraper(max_results=max_per_platform)
+        await safe_log('info', f'Initialisation des scrapers (Playwright: {self.use_playwright})')
+        
+        if self.use_playwright:
+            # Utilisation du scraper multi-plateformes Playwright
+            await safe_log('info', 'Utilisation du scraper Playwright multi-plateformes')
+            self.scrapers['multi_platform'] = MultiPlatformPlaywrightScraper(
+                max_results=self.max_results,
+                headless=self.headless
+            )
             
-        if 'ebay' in self.platforms:
-            self.scrapers['ebay'] = EbayScraper(max_results=max_per_platform)
+            # Scraper Amazon spécialisé avec Playwright
+            if 'amazon' in self.platforms:
+                self.scrapers['amazon_playwright'] = AmazonPlaywrightScraper(
+                    max_results=max_per_platform,
+                    headless=self.headless
+                )
+        else:
+            # Utilisation des scrapers traditionnels
+            await safe_log('info', 'Utilisation des scrapers traditionnels')
             
-        if 'walmart' in self.platforms:
-            self.scrapers['walmart'] = WalmartScraper(max_results=max_per_platform)
-            
-        if 'etsy' in self.platforms:
-            self.scrapers['etsy'] = EtsyScraper(max_results=max_per_platform)
-            
-        if 'shopify' in self.platforms:
-            domains = self.shopify_domains if self.shopify_domains else ['shopify.com']
-            self.scrapers['shopify'] = ShopifyScraper(max_results=max_per_platform, domains=domains)
+            if 'amazon' in self.platforms:
+                self.scrapers['amazon'] = AmazonScraper(max_results=max_per_platform)
+                
+            if 'ebay' in self.platforms:
+                self.scrapers['ebay'] = EbayScraper(max_results=max_per_platform)
+                
+            if 'walmart' in self.platforms:
+                self.scrapers['walmart'] = WalmartScraper(max_results=max_per_platform)
+                
+            if 'etsy' in self.platforms:
+                self.scrapers['etsy'] = EtsyScraper(max_results=max_per_platform)
+                
+            if 'shopify' in self.platforms:
+                domains = self.shopify_domains if self.shopify_domains else ['shopify.com']
+                self.scrapers['shopify'] = ShopifyScraper(max_results=max_per_platform, domains=domains)
     
     async def scrape_all_platforms(self) -> List[Dict[str, Any]]:
-        """Lance le scraping sur toutes les plateformes sélectionnées avec retry automatique."""
-        async def execute_scraping():
-            all_products = []
+        """Lance le scraping sur toutes les plateformes avec retry intelligent jusqu'à obtenir 50 produits."""
+        all_products = []
+        platform_products = {platform: [] for platform in self.scrapers.keys()}
+        attempt = 0
+        max_attempts = 20
+        target_total = self.max_results
+        min_per_platform = 5
+        
+        await safe_log('info', f'Objectif: {target_total} produits au total, minimum {min_per_platform} par plateforme')
+        
+        while attempt < max_attempts:
+            attempt += 1
+            await safe_log('info', f'Tentative {attempt}/{max_attempts}')
             
+            # Vérifier si on a atteint l'objectif
+            total_products = sum(len(products) for products in platform_products.values())
+            platforms_with_min = sum(1 for products in platform_products.values() if len(products) >= min_per_platform)
+            
+            if total_products >= target_total and platforms_with_min == len(self.scrapers):
+                await safe_log('info', f'Objectif atteint: {total_products} produits trouvés avec au moins {min_per_platform} par plateforme')
+                break
+            
+            # Identifier les plateformes qui ont besoin de plus de produits
+            platforms_to_scrape = []
+            for platform in self.scrapers.keys():
+                current_count = len(platform_products[platform])
+                if current_count < min_per_platform or total_products < target_total:
+                    platforms_to_scrape.append(platform)
+            
+            if not platforms_to_scrape:
+                break
+            
+            await safe_log('info', f'Scraping des plateformes: {", ".join(platforms_to_scrape)}')
+            
+            # Scraper les plateformes qui ont besoin de plus de produits
             for search_term in self.search_terms:
                 await safe_log('info', f'Recherche pour le terme: {search_term}')
                 
-                # Lancer le scraping en parallèle sur toutes les plateformes
+                # Lancer le scraping en parallèle sur les plateformes sélectionnées
                 tasks = []
-                for platform, scraper in self.scrapers.items():
-                    task = self._scrape_platform(platform, scraper, search_term)
-                    tasks.append(task)
+                for platform in platforms_to_scrape:
+                    if platform in self.scrapers:
+                        scraper = self.scrapers[platform]
+                        task = self._scrape_platform(platform, scraper, search_term)
+                        tasks.append((platform, task))
                 
                 # Attendre que tous les scrapers terminent
-                platform_results = await asyncio.gather(*tasks, return_exceptions=True)
-                
-                # Traiter les résultats
-                for i, result in enumerate(platform_results):
-                    platform = list(self.scrapers.keys())[i]
-                    if isinstance(result, Exception):
-                        await safe_log('error', f'Erreur sur {platform}: {str(result)}')
-                    else:
-                        self.results[platform].extend(result)
-                        all_products.extend([product.to_dict() for product in result])
+                for platform, task in tasks:
+                    try:
+                        result = await task
+                        if result:
+                            # Éviter les doublons en vérifiant les URLs
+                            existing_urls = set()
+                            for p in platform_products[platform]:
+                                if hasattr(p, 'to_dict'):
+                                    existing_urls.add(p.to_dict().get('url', ''))
+                                elif hasattr(p, 'url'):
+                                    existing_urls.add(p.url)
+                                else:
+                                    existing_urls.add(p.get('url', '') if hasattr(p, 'get') else '')
+                            
+                            new_products = []
+                            for p in result:
+                                product_url = ''
+                                if hasattr(p, 'to_dict'):
+                                    product_url = p.to_dict().get('url', '')
+                                elif hasattr(p, 'url'):
+                                    product_url = p.url
+                                else:
+                                    product_url = p.get('url', '') if hasattr(p, 'get') else ''
+                                
+                                if product_url not in existing_urls:
+                                    new_products.append(p)
+                                    existing_urls.add(product_url)
+                            
+                            if new_products:
+                                platform_products[platform].extend(new_products)
+                                await safe_log('info', f'{platform}: +{len(new_products)} nouveaux produits (total: {len(platform_products[platform])})')
+                    except Exception as e:
+                        await safe_log('error', f'Erreur sur {platform}: {str(e)}')
             
-            return all_products
+            # Attendre un peu avant la prochaine tentative
+            if attempt < max_attempts:
+                await asyncio.sleep(2)
         
-        try:
-            # Utilisation du système de retry pour l'ensemble du processus
-            return await retry_on_error(execute_scraping, max_retries=3, delay=5.0)
-        except Exception as e:
-            await safe_log('error', f'Échec complet du scraping après toutes les tentatives: {str(e)}')
-            return []
+        # Compiler tous les produits
+        for platform, products in platform_products.items():
+            self.results[platform] = products
+            all_products.extend([product.to_dict() for product in products])
+        
+        total_found = len(all_products)
+        await safe_log('info', f'Scraping terminé après {attempt} tentatives: {total_found} produits trouvés')
+        
+        # Afficher le résumé par plateforme
+        for platform, products in platform_products.items():
+            count = len(products)
+            status = "✓" if count >= min_per_platform else "✗"
+            await safe_log('info', f'{platform}: {count} produits {status}')
+        
+        return all_products
     
     async def _scrape_platform(self, platform: str, scraper, search_term: str) -> list:
         """Scrape une plateforme spécifique avec gestion d'erreurs et retry automatique."""

@@ -1,0 +1,483 @@
+{
+  "test_config": {
+    "platforms": [
+      "amazon",
+      "ebay"
+    ],
+    "searchTerms": [
+      "iPhone"
+    ],
+    "maxResults": 50,
+    "trackPrices": true,
+    "trackStock": true,
+    "trackTrends": false
+  },
+  "results": {
+    "total_products": 50,
+    "platform_counts": {
+      "amazon": 30,
+      "ebay": 20
+    },
+    "duration_seconds": 30.275095,
+    "objectives_met": {
+      "total_target": true,
+      "min_per_platform": true
+    },
+    "scraper_calls": {
+      "amazon": 10,
+      "ebay": 10
+    }
+  },
+  "products": [
+    {
+      "title": "iPhone 15 Amazon #0",
+      "price": 800,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-0",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:40.842981"
+    },
+    {
+      "title": "iPhone 15 Amazon #1",
+      "price": 810,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-1",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:40.842997"
+    },
+    {
+      "title": "iPhone 15 Amazon #2",
+      "price": 820,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-2",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:40.843002"
+    },
+    {
+      "title": "iPhone 15 Amazon #3",
+      "price": 800,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-3",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:43.873551"
+    },
+    {
+      "title": "iPhone 15 Amazon #4",
+      "price": 810,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-4",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:43.873576"
+    },
+    {
+      "title": "iPhone 15 Amazon #5",
+      "price": 820,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-5",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:43.873584"
+    },
+    {
+      "title": "iPhone 15 Amazon #6",
+      "price": 800,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-6",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:46.910443"
+    },
+    {
+      "title": "iPhone 15 Amazon #7",
+      "price": 810,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-7",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:46.910470"
+    },
+    {
+      "title": "iPhone 15 Amazon #8",
+      "price": 820,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-8",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:46.910479"
+    },
+    {
+      "title": "iPhone 15 Amazon #9",
+      "price": 800,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-9",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:49.940625"
+    },
+    {
+      "title": "iPhone 15 Amazon #10",
+      "price": 810,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-10",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:49.940643"
+    },
+    {
+      "title": "iPhone 15 Amazon #11",
+      "price": 820,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-11",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:49.940647"
+    },
+    {
+      "title": "iPhone 15 Amazon #12",
+      "price": 800,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-12",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:52.967868"
+    },
+    {
+      "title": "iPhone 15 Amazon #13",
+      "price": 810,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-13",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:52.967889"
+    },
+    {
+      "title": "iPhone 15 Amazon #14",
+      "price": 820,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-14",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:52.967894"
+    },
+    {
+      "title": "iPhone 15 Amazon #15",
+      "price": 800,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-15",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:55.983212"
+    },
+    {
+      "title": "iPhone 15 Amazon #16",
+      "price": 810,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-16",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:55.983236"
+    },
+    {
+      "title": "iPhone 15 Amazon #17",
+      "price": 820,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-17",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:55.983239"
+    },
+    {
+      "title": "iPhone 15 Amazon #18",
+      "price": 800,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-18",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:58.994138"
+    },
+    {
+      "title": "iPhone 15 Amazon #19",
+      "price": 810,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-19",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:58.994158"
+    },
+    {
+      "title": "iPhone 15 Amazon #20",
+      "price": 820,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-20",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:58.994183"
+    },
+    {
+      "title": "iPhone 15 Amazon #21",
+      "price": 800,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-21",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:02.035630"
+    },
+    {
+      "title": "iPhone 15 Amazon #22",
+      "price": 810,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-22",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:02.035656"
+    },
+    {
+      "title": "iPhone 15 Amazon #23",
+      "price": 820,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-23",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:02.035664"
+    },
+    {
+      "title": "iPhone 15 Amazon #24",
+      "price": 800,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-24",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:05.051738"
+    },
+    {
+      "title": "iPhone 15 Amazon #25",
+      "price": 810,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-25",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:05.051750"
+    },
+    {
+      "title": "iPhone 15 Amazon #26",
+      "price": 820,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-26",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:05.051754"
+    },
+    {
+      "title": "iPhone 15 Amazon #27",
+      "price": 800,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-27",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:08.073578"
+    },
+    {
+      "title": "iPhone 15 Amazon #28",
+      "price": 810,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-28",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:08.073604"
+    },
+    {
+      "title": "iPhone 15 Amazon #29",
+      "price": 820,
+      "currency": "EUR",
+      "url": "https://amazon.fr/iphone-29",
+      "platform": "amazon",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:08.073612"
+    },
+    {
+      "title": "iPhone 15 eBay #0",
+      "price": 750,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-0",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:41.354952"
+    },
+    {
+      "title": "iPhone 15 eBay #1",
+      "price": 765,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-1",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:41.354982"
+    },
+    {
+      "title": "iPhone 15 eBay #2",
+      "price": 750,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-2",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:44.390595"
+    },
+    {
+      "title": "iPhone 15 eBay #3",
+      "price": 765,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-3",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:44.390610"
+    },
+    {
+      "title": "iPhone 15 eBay #4",
+      "price": 750,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-4",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:47.422863"
+    },
+    {
+      "title": "iPhone 15 eBay #5",
+      "price": 765,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-5",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:47.422884"
+    },
+    {
+      "title": "iPhone 15 eBay #6",
+      "price": 750,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-6",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:50.455987"
+    },
+    {
+      "title": "iPhone 15 eBay #7",
+      "price": 765,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-7",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:50.456002"
+    },
+    {
+      "title": "iPhone 15 eBay #8",
+      "price": 750,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-8",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:53.474133"
+    },
+    {
+      "title": "iPhone 15 eBay #9",
+      "price": 765,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-9",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:53.474154"
+    },
+    {
+      "title": "iPhone 15 eBay #10",
+      "price": 750,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-10",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:56.489589"
+    },
+    {
+      "title": "iPhone 15 eBay #11",
+      "price": 765,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-11",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:56.489614"
+    },
+    {
+      "title": "iPhone 15 eBay #12",
+      "price": 750,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-12",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:59.507892"
+    },
+    {
+      "title": "iPhone 15 eBay #13",
+      "price": 765,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-13",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:00:59.507916"
+    },
+    {
+      "title": "iPhone 15 eBay #14",
+      "price": 750,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-14",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:02.538316"
+    },
+    {
+      "title": "iPhone 15 eBay #15",
+      "price": 765,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-15",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:02.538340"
+    },
+    {
+      "title": "iPhone 15 eBay #16",
+      "price": 750,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-16",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:05.554181"
+    },
+    {
+      "title": "iPhone 15 eBay #17",
+      "price": 765,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-17",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:05.554195"
+    },
+    {
+      "title": "iPhone 15 eBay #18",
+      "price": 750,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-18",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:08.587267"
+    },
+    {
+      "title": "iPhone 15 eBay #19",
+      "price": 765,
+      "currency": "EUR",
+      "url": "https://ebay.fr/iphone-19",
+      "platform": "ebay",
+      "availability": "En stock",
+      "timestamp": "2025-08-13T02:01:08.587292"
+    }
+  ]
+}
