@@ -11,10 +11,10 @@ from httpx import AsyncClient
 from bs4 import BeautifulSoup
 from apify import Actor
 
-from ..utils import safe_log
+from src.utils import safe_log
 
 try:
-    from ..config.anti_detection import AntiDetectionConfig
+    from src.config.anti_detection import AntiDetectionConfig
 except ImportError:
     # Fallback si le module n'est pas trouvé
     class AntiDetectionConfig:

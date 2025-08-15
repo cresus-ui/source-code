@@ -9,9 +9,9 @@ from bs4 import BeautifulSoup
 from apify import Actor
 from playwright.async_api import Page
 
-from .playwright_scraper import PlaywrightScraper
-from .base_scraper import Product
-from ..utils import safe_log
+from src.scrapers.playwright_scraper import PlaywrightScraper
+from src.scrapers.base_scraper import Product
+from src.utils import safe_log
 
 
 class AmazonPlaywrightScraper(PlaywrightScraper):

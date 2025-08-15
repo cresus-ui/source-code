@@ -10,8 +10,8 @@ from apify import Actor
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
 from playwright_stealth import stealth_async
 
-from .base_scraper import BaseScraper, Product
-from ..utils import safe_log
+from src.scrapers.base_scraper import BaseScraper, Product
+from src.utils import safe_log
 
 
 class PlaywrightScraper(BaseScraper):

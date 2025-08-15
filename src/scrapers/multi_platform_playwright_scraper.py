@@ -7,9 +7,9 @@ from datetime import datetime
 from urllib.parse import quote_plus, urljoin
 from playwright.async_api import Page
 
-from .playwright_scraper import PlaywrightScraper
-from .base_scraper import Product
-from ..utils import safe_log
+from src.scrapers.playwright_scraper import PlaywrightScraper
+from src.scrapers.base_scraper import Product
+from src.utils import safe_log
 
 
 class MultiPlatformPlaywrightScraper(PlaywrightScraper):
