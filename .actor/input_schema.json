@@ -1,78 +1,101 @@
 {
-    "title": "Configuration du scraper e-commerce multi-plateformes",
-    "type": "object",
-    "schemaVersion": 1,
-    "properties": {
-        "platforms": {
-            "title": "Plateformes à scraper",
-            "type": "array",
-            "description": "Sélectionnez les plateformes e-commerce à scraper",
-            "editor": "select",
-            "items": {
-                "type": "string",
-                "enum": ["amazon", "ebay", "walmart", "etsy", "shopify"]
-            },
-            "default": ["amazon"],
-            "uniqueItems": true
-        },
-        "searchTerms": {
-            "title": "Termes de recherche",
-            "type": "array",
-            "description": "Liste des produits ou termes à rechercher",
-            "editor": "stringList",
-            "items": {
-                "type": "string"
-            },
-            "default": ["smartphone"]
-        },
-        "maxResults": {
-            "title": "Nombre maximum de résultats par plateforme",
-            "type": "integer",
-            "description": "Limite le nombre de produits à scraper par plateforme",
-            "minimum": 1,
-            "maximum": 1000,
-            "default": 50
-        },
-        "trackPrices": {
-            "title": "Suivi des prix",
-            "type": "boolean",
-            "description": "Activer le suivi automatique des prix",
-            "default": true
-        },
-        "trackStock": {
-            "title": "Suivi des stocks",
-            "type": "boolean",
-            "description": "Activer le suivi de la disponibilité des stocks",
-            "default": true
-        },
-        "trackTrends": {
-            "title": "Analyse des tendances",
-            "type": "boolean",
-            "description": "Activer l'analyse des tendances de vente",
-            "default": false
-        },
-        "shopifyDomains": {
-            "title": "Domaines Shopify (optionnel)",
-            "type": "array",
-            "description": "Liste des domaines Shopify spécifiques à scraper",
-            "editor": "stringList",
-            "items": {
-                "type": "string"
-            },
-            "default": []
-        },
-        "usePlaywright": {
-            "title": "Utiliser Playwright avec Chromium",
-            "type": "boolean",
-            "description": "Activer Playwright avec Chromium pour de meilleures performances et anti-détection",
-            "default": true
-        },
-        "headless": {
-            "title": "Mode headless",
-            "type": "boolean",
-            "description": "Exécuter le navigateur en mode headless (sans interface graphique)",
-            "default": true
-        }
+  "title": "Multi-Platform E-commerce Mass Scraper",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "search_terms": {
+      "title": "Termes de recherche",
+      "type": "array",
+      "description": "Liste des termes/mots-clés à rechercher sur toutes les plateformes",
+      "default": ["smartphone", "laptop", "headphones", "tablet", "smartwatch"],
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "maxItems": 20
     },
-    "required": ["platforms", "searchTerms"]
+    "target_products": {
+      "title": "Objectif de produits",
+      "type": "integer",
+      "description": "Nombre total de produits à récupérer (tous termes et plateformes confondus)",
+      "default": 500,
+      "minimum": 10,
+      "maximum": 2000
+    },
+    "maxResults": {
+      "title": "Résultats max par recherche",
+      "type": "integer",
+      "description": "Nombre maximum de produits à récupérer par terme de recherche et par plateforme",
+      "default": 50,
+      "minimum": 5,
+      "maximum": 100
+    },
+    "blocked_platforms": {
+      "title": "Plateformes bloquées",
+      "type": "array",
+      "description": "Plateformes à exclure du scraping (utile pour les tests)",
+      "default": [],
+      "items": {
+        "type": "string",
+        "enum": ["amazon", "ebay"]
+      },
+      "uniqueItems": true
+    },
+    "max_retries": {
+      "title": "Tentatives maximum",
+      "type": "integer",
+      "description": "Nombre maximum de tentatives en cas d'échec",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 5
+    },
+    "timeout_per_scraper": {
+      "title": "Timeout par scraper (secondes)",
+      "type": "number",
+      "description": "Temps maximum d'attente pour chaque scraper",
+      "default": 30.0,
+      "minimum": 10.0,
+      "maximum": 120.0
+    },
+    "pause_between_terms": {
+      "title": "Pause entre termes (min-max secondes)",
+      "type": "array",
+      "description": "Intervalle de pause aléatoire entre les termes de recherche",
+      "default": [3.0, 7.0],
+      "items": {
+        "type": "number",
+        "minimum": 0.5,
+        "maximum": 30.0
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "pause_between_retries": {
+      "title": "Pause entre tentatives (min-max secondes)",
+      "type": "array",
+      "description": "Intervalle de pause aléatoire entre les tentatives en cas d'échec",
+      "default": [2.0, 5.0],
+      "items": {
+        "type": "number",
+        "minimum": 0.5,
+        "maximum": 20.0
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "useHeadless": {
+      "title": "Mode headless",
+      "type": "boolean",
+      "description": "Utiliser Playwright en mode headless (recommandé pour la production)",
+      "default": true
+    },
+    "enableDetailedLogging": {
+      "title": "Logs détaillés",
+      "type": "boolean",
+      "description": "Activer les logs détaillés pour le débogage",
+      "default": false
+    }
+  },
+  "required": ["search_terms", "target_products"]
 }
