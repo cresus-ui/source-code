@@ -66,7 +66,7 @@ class MultiPlatformPlaywrightScraper(PlaywrightScraper):
         results = {}
         
         try:
-            safe_log(f"Démarrage de la recherche multi-plateformes pour: {search_term}")
+            await safe_log('info', f"Démarrage de la recherche multi-plateformes pour: {search_term}")
             
             # Initialisation du navigateur
             await self.init_browser()
@@ -84,14 +84,14 @@ class MultiPlatformPlaywrightScraper(PlaywrightScraper):
             for i, platform in enumerate(self.platforms_config.keys()):
                 result = platform_results[i]
                 if isinstance(result, Exception):
-                    safe_log(f"Erreur pour {platform}: {result}")
+                    await safe_log('error', f"Erreur pour {platform}: {result}")
                     results[platform] = []
                 else:
                     results[platform] = result
-                    safe_log(f"{platform}: {len(result)} produits trouvés")
+                    await safe_log('info', f"{platform}: {len(result)} produits trouvés")
             
         except Exception as e:
-            safe_log(f"Erreur lors de la recherche multi-plateformes: {e}")
+            await safe_log('error', f"Erreur lors de la recherche multi-plateformes: {e}")
         
         finally:
             await self.close()
@@ -106,7 +106,7 @@ class MultiPlatformPlaywrightScraper(PlaywrightScraper):
             config = self.platforms_config[platform]
             search_url = config['base_url'] + config['search_path'].format(quote_plus(search_term))
             
-            safe_log(f"Recherche sur {platform}: {search_url}")
+            await safe_log("info", f"Recherche sur {platform}: {search_url}")
             
             # Création d'une page dédiée
             page = await self.create_page()
@@ -118,7 +118,7 @@ class MultiPlatformPlaywrightScraper(PlaywrightScraper):
             if await self.navigate_with_retry(page, search_url):
                 # Vérification de blocage
                 if await self._check_platform_blocking(page, platform):
-                    safe_log(f"Blocage détecté sur {platform}")
+                    await safe_log("warning", f"Blocage détecté sur {platform}")
                     await page.close()
                     return products
                 
@@ -128,7 +128,7 @@ class MultiPlatformPlaywrightScraper(PlaywrightScraper):
             await page.close()
             
         except Exception as e:
-            safe_log(f"Erreur lors de la recherche sur {platform}: {e}")
+            await safe_log("error", f"Erreur lors de la recherche sur {platform}: {e}")
         
         return products[:self.max_results]
     
@@ -169,7 +169,7 @@ class MultiPlatformPlaywrightScraper(PlaywrightScraper):
                 """)
             
         except Exception as e:
-            safe_log(f"Erreur lors de la configuration pour {platform}: {e}")
+            await safe_log("error", f"Erreur lors de la configuration pour {platform}: {e}")
     
     async def _check_platform_blocking(self, page: Page, platform: str) -> bool:
         """Vérifie si la plateforme bloque l'accès."""
@@ -198,7 +198,7 @@ class MultiPlatformPlaywrightScraper(PlaywrightScraper):
             return False
             
         except Exception as e:
-            safe_log(f"Erreur lors de la vérification de blocage pour {platform}: {e}")
+            await safe_log("error", f"Erreur lors de la vérification de blocage pour {platform}: {e}")
             return False
     
     async def _extract_platform_products(self, page: Page, platform: str) -> List[Product]:
@@ -216,7 +216,7 @@ class MultiPlatformPlaywrightScraper(PlaywrightScraper):
                 try:
                     elements = await page.query_selector_all(selector)
                     if elements:
-                        safe_log(f"{platform}: Trouvé {len(elements)} éléments avec {selector}")
+                        await safe_log("info", f"{platform}: Trouvé {len(elements)} éléments avec {selector}")
                         
                         for element in elements[:self.max_results]:
                             product = await self._extract_product_from_platform_element(
@@ -229,11 +229,11 @@ class MultiPlatformPlaywrightScraper(PlaywrightScraper):
                             break
                             
                 except Exception as e:
-                    safe_log(f"Erreur avec le sélecteur {selector} sur {platform}: {e}")
+                    await safe_log("error", f"Erreur avec le sélecteur {selector} sur {platform}: {e}")
                     continue
             
         except Exception as e:
-            safe_log(f"Erreur lors de l'extraction sur {platform}: {e}")
+            await safe_log("error", f"Erreur lors de l'extraction sur {platform}: {e}")
         
         return products
     
@@ -304,7 +304,7 @@ class MultiPlatformPlaywrightScraper(PlaywrightScraper):
             )
             
         except Exception as e:
-            safe_log(f"Erreur lors de l'extraction du produit sur {platform}: {e}")
+            await safe_log("error", f"Erreur lors de l'extraction du produit sur {platform}: {e}")
             return None
     
     async def search_products(self, search_term: str) -> List[Product]:
@@ -321,7 +321,7 @@ class MultiPlatformPlaywrightScraper(PlaywrightScraper):
     async def search_specific_platform(self, platform: str, search_term: str) -> List[Product]:
         """Recherche sur une plateforme spécifique."""
         if platform not in self.platforms_config:
-            safe_log(f"Plateforme {platform} non supportée")
+            await safe_log("warning", f"Plateforme {platform} non supportée")
             return []
         
         try:
@@ -330,5 +330,5 @@ class MultiPlatformPlaywrightScraper(PlaywrightScraper):
             await self.close()
             return products
         except Exception as e:
-            safe_log(f"Erreur lors de la recherche sur {platform}: {e}")
+            await safe_log("error", f"Erreur lors de la recherche sur {platform}: {e}")
             return []

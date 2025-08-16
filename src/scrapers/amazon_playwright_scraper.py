@@ -59,7 +59,7 @@ class AmazonPlaywrightScraper(PlaywrightScraper):
         products = []
         
         try:
-            safe_log(f"Démarrage de la recherche Amazon Playwright pour: {search_term}")
+            await safe_log("info", f"Démarrage de la recherche Amazon Playwright pour: {search_term}")
             
             # Initialisation du navigateur si nécessaire
             if not self.browser:
@@ -75,13 +75,13 @@ class AmazonPlaywrightScraper(PlaywrightScraper):
             for endpoint in self.search_endpoints:
                 try:
                     search_url = self.base_url + endpoint.format(quote_plus(search_term))
-                    safe_log(f"Tentative avec URL: {search_url}")
+                    await safe_log("info", f"Tentative avec URL: {search_url}")
                     
                     # Navigation avec retry
                     if await self.navigate_with_retry(page, search_url):
                         # Vérification si on est bloqué
                         if await self._check_if_blocked(page):
-                            safe_log("Détection de blocage Amazon, tentative de contournement...")
+                            await safe_log("warning", "Détection de blocage Amazon, tentative de contournement...")
                             await self._handle_amazon_captcha(page)
                             continue
                         
@@ -90,20 +90,20 @@ class AmazonPlaywrightScraper(PlaywrightScraper):
                         products.extend(page_products)
                         
                         if products:
-                            safe_log(f"Trouvé {len(products)} produits avec l'endpoint {endpoint}")
+                            await safe_log("info", f"Trouvé {len(products)} produits avec l'endpoint {endpoint}")
                             break
                     
                     # Délai entre les tentatives
                     await asyncio.sleep(random.uniform(2, 4))
                     
                 except Exception as e:
-                    safe_log(f"Erreur avec l'endpoint {endpoint}: {e}")
+                    await safe_log("error", f"Erreur avec l'endpoint {endpoint}: {e}")
                     continue
             
             await page.close()
             
         except Exception as e:
-            safe_log(f"Erreur lors de la recherche Amazon: {e}")
+            await safe_log("error", f"Erreur lors de la recherche Amazon: {e}")
         
         finally:
             # Nettoyage
@@ -112,7 +112,7 @@ class AmazonPlaywrightScraper(PlaywrightScraper):
             except:
                 pass
         
-        safe_log(f"Recherche Amazon terminée. {len(products)} produits trouvés.")
+        await safe_log("info", f"Recherche Amazon terminée. {len(products)} produits trouvés.")
         return products[:self.max_results]
     
     async def _check_if_blocked(self, page: Page) -> bool:
@@ -150,13 +150,13 @@ class AmazonPlaywrightScraper(PlaywrightScraper):
             return False
             
         except Exception as e:
-            safe_log(f"Erreur lors de la vérification de blocage: {e}")
+            await safe_log("error", f"Erreur lors de la vérification de blocage: {e}")
             return False
     
     async def _handle_amazon_captcha(self, page: Page) -> bool:
         """Tente de gérer les CAPTCHAs Amazon (basique)."""
         try:
-            safe_log("Tentative de gestion du CAPTCHA Amazon...")
+            await safe_log("info", "Tentative de gestion du CAPTCHA Amazon...")
             
             # Attendre un peu pour voir si le CAPTCHA se résout automatiquement
             await asyncio.sleep(random.uniform(5, 10))
@@ -168,7 +168,7 @@ class AmazonPlaywrightScraper(PlaywrightScraper):
             return not await self._check_if_blocked(page)
             
         except Exception as e:
-            safe_log(f"Erreur lors de la gestion du CAPTCHA: {e}")
+            await safe_log("error", f"Erreur lors de la gestion du CAPTCHA: {e}")
             return False
     
     async def _extract_amazon_products(self, page: Page) -> List[Product]:
@@ -184,7 +184,7 @@ class AmazonPlaywrightScraper(PlaywrightScraper):
                 try:
                     elements = await page.query_selector_all(selector)
                     if elements:
-                        safe_log(f"Trouvé {len(elements)} éléments avec le sélecteur {selector}")
+                        await safe_log("info", f"Trouvé {len(elements)} éléments avec le sélecteur {selector}")
                         
                         for element in elements[:self.max_results]:
                             product = await self._extract_amazon_product_from_element(element)
@@ -195,11 +195,11 @@ class AmazonPlaywrightScraper(PlaywrightScraper):
                             break  # Utiliser le premier sélecteur qui fonctionne
                             
                 except Exception as e:
-                    safe_log(f"Erreur avec le sélecteur Amazon {selector}: {e}")
+                    await safe_log("error", f"Erreur avec le sélecteur Amazon {selector}: {e}")
                     continue
             
         except Exception as e:
-            safe_log(f"Erreur lors de l'extraction des produits Amazon: {e}")
+            await safe_log("error", f"Erreur lors de l'extraction des produits Amazon: {e}")
         
         return products
     
@@ -297,7 +297,7 @@ class AmazonPlaywrightScraper(PlaywrightScraper):
             )
             
         except Exception as e:
-            safe_log(f"Erreur lors de l'extraction du produit Amazon: {e}")
+            await safe_log("error", f"Erreur lors de l'extraction du produit Amazon: {e}")
             return None
     
     async def get_product_details(self, product_url: str) -> Optional[Dict[str, Any]]:
@@ -319,7 +319,7 @@ class AmazonPlaywrightScraper(PlaywrightScraper):
             return None
             
         except Exception as e:
-            safe_log(f"Erreur lors de la récupération des détails: {e}")
+            await safe_log("error", f"Erreur lors de la récupération des détails: {e}")
             return None
     
     async def _extract_product_details(self, page: Page) -> Dict[str, Any]:
@@ -366,6 +366,6 @@ class AmazonPlaywrightScraper(PlaywrightScraper):
                 details['seller'] = await seller_element.inner_text()
             
         except Exception as e:
-            safe_log(f"Erreur lors de l'extraction des détails: {e}")
+            await safe_log("error", f"Erreur lors de l'extraction des détails: {e}")
         
         return details

@@ -13,7 +13,7 @@ from collections import defaultdict
 
 from apify import Actor
 
-from .scrapers import (
+from src.scrapers import (
     AmazonScraper,
     EbayScraper,
     WalmartScraper,
@@ -22,12 +22,12 @@ from .scrapers import (
 )
 
 # Import des nouveaux scrapers Playwright
-from .scrapers.amazon_playwright_scraper import AmazonPlaywrightScraper
-from .scrapers.multi_platform_playwright_scraper import MultiPlatformPlaywrightScraper
+from src.scrapers.amazon_playwright_scraper import AmazonPlaywrightScraper
+from src.scrapers.multi_platform_playwright_scraper import MultiPlatformPlaywrightScraper
 
 
 # Import de safe_log depuis utils
-from .utils import safe_log
+from src.utils import safe_log
 
 
 async def retry_on_error(func, *args, max_retries: int = 20, delay: float = 1.0, **kwargs):

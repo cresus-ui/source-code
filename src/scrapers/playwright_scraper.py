@@ -8,7 +8,12 @@ from urllib.parse import quote_plus, urljoin
 from bs4 import BeautifulSoup
 from apify import Actor
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
-from playwright_stealth import stealth_async
+try:
+    from playwright_stealth import stealth_async
+    STEALTH_AVAILABLE = True
+except ImportError:
+    STEALTH_AVAILABLE = False
+    stealth_async = None
 
 from src.scrapers.base_scraper import BaseScraper, Product
 from src.utils import safe_log
@@ -86,10 +91,10 @@ class PlaywrightScraper(BaseScraper):
                 }
             )
             
-            safe_log("Navigateur Chromium initialisé avec succès")
+            await safe_log("info", "Navigateur Chromium initialisé avec succès")
             
         except Exception as e:
-            safe_log(f"Erreur lors de l'initialisation du navigateur: {e}")
+            await safe_log("error", f"Erreur lors de l'initialisation du navigateur: {e}")
             raise
     
     async def create_page(self) -> Page:
@@ -99,9 +104,12 @@ class PlaywrightScraper(BaseScraper):
         
         page = await self.context.new_page()
         
-        # Application du mode stealth si activé
-        if self.use_stealth:
-            await stealth_async(page)
+        # Application du mode stealth si activé et disponible
+        if self.use_stealth and STEALTH_AVAILABLE and stealth_async:
+            try:
+                await stealth_async(page)
+            except Exception as e:
+                await safe_log("warning", f"Erreur stealth (ignorée): {e}")
         
         # Injection de scripts anti-détection
         await page.add_init_script("""
@@ -155,10 +163,10 @@ class PlaywrightScraper(BaseScraper):
                     await page.wait_for_timeout(random.randint(1000, 3000))
                     return True
                 else:
-                    safe_log(f"Réponse HTTP {response.status if response else 'None'} pour {url}")
+                    await safe_log("info", f"Réponse HTTP {response.status if response else 'None'} pour {url}")
                     
             except Exception as e:
-                safe_log(f"Tentative {attempt + 1} échouée pour {url}: {e}")
+                await safe_log("warning", f"Tentative {attempt + 1} échouée pour {url}: {e}")
                 if attempt == max_retries - 1:
                     return False
         
@@ -180,7 +188,7 @@ class PlaywrightScraper(BaseScraper):
                 try:
                     elements = await page.query_selector_all(selector)
                     if elements:
-                        safe_log(f"Trouvé {len(elements)} éléments avec le sélecteur {selector}")
+                        await safe_log("info", f"Trouvé {len(elements)} éléments avec le sélecteur {selector}")
                         
                         for element in elements[:self.max_results]:
                             product = await self._extract_product_from_element(element, platform)
@@ -191,11 +199,11 @@ class PlaywrightScraper(BaseScraper):
                             break  # Utiliser le premier sélecteur qui fonctionne
                             
                 except Exception as e:
-                    safe_log(f"Erreur avec le sélecteur {selector}: {e}")
+                    await safe_log("error", f"Erreur avec le sélecteur {selector}: {e}")
                     continue
             
         except Exception as e:
-            safe_log(f"Erreur lors de l'extraction des produits: {e}")
+            await safe_log("error", f"Erreur lors de l'extraction des produits: {e}")
         
         return products[:self.max_results]
     
@@ -267,7 +275,7 @@ class PlaywrightScraper(BaseScraper):
             )
             
         except Exception as e:
-            safe_log(f"Erreur lors de l'extraction du produit: {e}")
+            await safe_log("error", f"Erreur lors de l'extraction du produit: {e}")
             return None
     
     async def close(self) -> None:
@@ -277,9 +285,9 @@ class PlaywrightScraper(BaseScraper):
                 await self.context.close()
             if self.browser:
                 await self.browser.close()
-            safe_log("Navigateur fermé avec succès")
+            await safe_log("info", "Navigateur fermé avec succès")
         except Exception as e:
-            safe_log(f"Erreur lors de la fermeture du navigateur: {e}")
+            await safe_log("error", f"Erreur lors de la fermeture du navigateur: {e}")
     
     def get_platform_name(self) -> str:
         return "Playwright-Chromium"
