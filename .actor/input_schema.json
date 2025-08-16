@@ -8,13 +8,14 @@
       "type": "array",
       "description": "Liste des termes/mots-clés à rechercher sur toutes les plateformes",
       "default": ["smartphone", "laptop", "headphones", "tablet", "smartwatch"],
+      "editor": "stringList",
       "items": {
         "type": "string",
         "minLength": 1
       },
       "minItems": 1,
       "maxItems": 20
-    },
+    }
     "target_products": {
       "title": "Objectif de produits",
       "type": "integer",
